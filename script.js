@@ -893,20 +893,17 @@ function getNextVoucherNumber(voucherType) {
 
 
 function getMangoAccountTotals(accountName, accountId = '') {
-    const transactions = getLaserTransactions();
+    const account = { name: accountName, id: accountId };
+    const transactions = getPersonalLedgerTransactions(account);
     let debit = 0;
     let credit = 0;
 
     transactions.forEach(record => {
         if (!record) return;
-        const matchName = accountName && record.name === accountName;
-        const matchId = accountId && record.id === accountId;
-        if (!matchName && !matchId) return;
-
         const source = (record.source || '').toLowerCase();
-        const amount = Number(record.amount || record.paid || 0);
+        const amount = Number(record.grandTotal || record.amount || record.paid || 0);
 
-        if (source === 'purchase' || source === 'receipt voucher') {
+        if (source === 'purchase bill' || source === 'receipt voucher') {
             debit += amount;
         }
         if (source === 'sale' || source === 'payment voucher') {
@@ -914,7 +911,10 @@ function getMangoAccountTotals(accountName, accountId = '') {
         }
     });
 
-    return { debit, credit };
+    const balance = debit - credit;
+    return balance >= 0
+        ? { debit: balance, credit: 0 }
+        : { debit: 0, credit: Math.abs(balance) };
 }
 
 function renderMangoLedgerAccounts(searchTerm = '') {
@@ -995,16 +995,7 @@ function renderMangoLedgerDetails(accountId) {
         return;
     }
 
-    const transactions = getLaserTransactions().filter(record => {
-        if (!record) return false;
-        const sameName = record.name === currentAccount.name;
-        const sameId = !!currentAccount.id && record.id === currentAccount.id;
-        return sameName || sameId;
-    }).sort((a, b) => {
-        const dateA = formatDateToYYYYMMDD(a.date || '');
-        const dateB = formatDateToYYYYMMDD(b.date || '');
-        return new Date(dateA) - new Date(dateB);
-    });
+    const transactions = getPersonalLedgerTransactions(currentAccount);
 
     detailTableBody.innerHTML = '';
 
@@ -1016,7 +1007,7 @@ function renderMangoLedgerDetails(accountId) {
     transactions.forEach(record => {
         const source = String(record.source || '').trim();
         const amount = Number(record.amount || record.paid || 0);
-        const isDebit = ['purchase', 'receipt voucher'].includes(source.toLowerCase());
+        const isDebit = ['purchase bill', 'receipt voucher'].includes(source.toLowerCase());
         const isCredit = ['sale', 'payment voucher'].includes(source.toLowerCase());
 
         const row = document.createElement('tr');
@@ -1085,18 +1076,24 @@ function initLedgerAccountPage() {
 
         transactions.forEach(record => {
             const source = String(record.source || '').trim();
-            const debit = ['purchase', 'receipt voucher'].includes((source || '').toLowerCase()) ? Number(record.amount || record.paid || 0) : 0;
+            const debit = ['purchase bill', 'receipt voucher'].includes((source || '').toLowerCase()) ? Number(record.grandTotal || record.amount || record.paid || 0) : 0;
             const credit = ['sale', 'payment voucher'].includes((source || '').toLowerCase()) ? Number(record.amount || record.paid || 0) : 0;
             const row = document.createElement('tr');
-            row.title = 'Click to view transaction details';
+            row.title = 'Open transaction';
             row.addEventListener('click', function() {
-                alert(record.details || `${source}\nDate: ${record.date || ''}\nAmount: ${record.amount || 0}\nMode: ${record.mode || 'Cash'}`);
+                if (source.toLowerCase() === 'purchase bill') {
+                    window.open(`bill-entry.html?arrivalNo=${encodeURIComponent(record.arrivalNo || '')}`, '_blank');
+                    return;
+                }
+                if (source.toLowerCase().includes('voucher')) {
+                    window.open(`voucher.html?voucherNo=${encodeURIComponent(record.voucherNo || '')}`, '_blank');
+                }
             });
             row.innerHTML = `
                 <td>${record.date || ''}</td>
                 <td>${source || 'Entry'}</td>
                 <td>${record.voucherNo || record.invoiceId || record.arrivalNo || record.id || ''}</td>
-                <td>${record.mode || 'Cash'}</td>
+                <td>${source.toLowerCase() === 'purchase bill' ? '' : (record.mode || 'Cash')}</td>
                 <td class="text-end">${debit.toFixed(2)}</td>
                 <td class="text-end">${credit.toFixed(2)}</td>
             `;
@@ -1108,9 +1105,14 @@ function initLedgerAccountPage() {
 function getPersonalLedgerTransactions(account) {
     const transactions = getLaserTransactions().filter(record => {
         if (!record) return false;
+        if (String(record.source || '').toLowerCase() === 'purchase') return false;
         return (account.name && record.name === account.name) || (account.id && record.id === account.id);
     });
+    const latestBills = new Map();
     Object.values(getArrivalBillHistory()).flat().forEach(bill => {
+        if (bill && bill.arrivalNo) latestBills.set(String(bill.arrivalNo), bill);
+    });
+    latestBills.forEach(bill => {
         if (!bill || bill.farmerName !== account.name) return;
         transactions.push({
             ...bill,
@@ -1244,6 +1246,19 @@ function initVoucherPage() {
         if (voucherNoInput) voucherNoInput.value = record.voucherNo || '';
         if (document.getElementById('voucherMode')) {
             document.getElementById('voucherMode').value = record.mode || 'Cash';
+        }
+    }
+
+    const requestedVoucherNo = new URLSearchParams(window.location.search).get('voucherNo');
+    if (requestedVoucherNo) {
+        const requestedVoucher = getLaserTransactions().find(record => String(record?.voucherNo || '') === String(requestedVoucherNo));
+        if (requestedVoucher) {
+            selectedVoucherType = String(requestedVoucher.source || 'Payment Voucher');
+            editingVoucherNo = String(requestedVoucher.voucherNo || '');
+            document.querySelector('.row.g-4.justify-content-center')?.classList.add('d-none');
+            voucherFormContainer?.classList.remove('d-none');
+            if (voucherTypeTitle) voucherTypeTitle.textContent = `View ${selectedVoucherType}`;
+            fillVoucherFormFromRecord(requestedVoucher);
         }
     }
 
@@ -2090,12 +2105,16 @@ function recordArrivalBillingHistory(arrivalNo, billData) {
         date: billData.date || getTodayDDMMYYYY(),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
         grandTotal: Number(billData.grandTotal || 0),
+        totalAmount: Number(billData.totalAmount || 0),
+        expenseAmount: Number(billData.expenseAmount || 0),
         farmerName: billData.farmerName || '',
+        station: billData.station || '',
+        rows: Array.isArray(billData.rows) ? billData.rows : [],
         createdAt: new Date().toISOString(),
-        sequenceNumber: (Array.isArray(historyMap[key]) ? historyMap[key].length : 0) + 1
+        sequenceNumber: 1
     };
 
-    historyMap[key] = [...(Array.isArray(historyMap[key]) ? historyMap[key] : []), entry];
+    historyMap[key] = [entry];
     localStorage.setItem(ARRIVAL_BILL_HISTORY_KEY, JSON.stringify(historyMap));
     return entry;
 }
@@ -2118,14 +2137,17 @@ function populateArrivalBillingExpense(arrivalNo) {
     const paymentMode = expenseDetails.paymentMode || 'Cash';
     const inchargeName = expenseDetails.inchargeName || 'N/A';
     const unloadingType = expenseDetails.unloadingType || 'Self';
+    const arrivalQuantity = (selectedArrival.details || []).reduce((sum, detail) => sum + Number(detail.quantity || 0), 0);
+    const unloadingAmount = unloadingType === 'Mandi Labours' ? (arrivalQuantity / 1000) * 120 : 0;
+    const totalExpense = (Number(freightValue) || 0) + unloadingAmount;
 
     expenseSummary.innerHTML = `
         <div class="mb-2"><strong>Freight:</strong> ${freightValue}</div>
         <div class="mb-2"><strong>Payment Mode:</strong> ${paymentMode}</div>
         <div class="mb-2"><strong>Incharge:</strong> ${inchargeName}</div>
-        <div class="mb-2"><strong>Unloading:</strong> ${unloadingType}</div>
+        <div class="mb-2"><strong>U/L:</strong> ${unloadingAmount.toFixed(2)}</div>
     `;
-    expenseSummary.dataset.expenseAmount = String(Number(freightValue) || 0);
+    expenseSummary.dataset.expenseAmount = String(totalExpense);
     updateBillGrandTotal();
 }
 
@@ -2162,6 +2184,21 @@ function initBillEntryPage() {
             billDateInput.value = formatDateToYYYYMMDD(selectedArrival.date);
         }
         populateArrivalBillingExpense(selectedArrivalNo);
+        const savedBill = getArrivalBillingHistoryForNumber(selectedArrivalNo)[0];
+        if (savedBill && Array.isArray(savedBill.rows) && savedBill.rows.length) {
+            billDetailsBody.innerHTML = savedBill.rows.map((row, index) => `
+                <tr>
+                    <td><input type="number" class="form-control form-control-sm bill-base-rate" value="${row.baseRate || ''}" min="0" step="0.01"></td>
+                    <td class="bill-sl-no-cell">${index + 1}</td>
+                    <td><input type="text" class="form-control form-control-sm bill-variety" value="${row.variety || ''}"></td>
+                    <td><input type="number" class="form-control form-control-sm bill-qty" value="${row.qty || ''}" min="0" step="1"></td>
+                    <td><input type="number" class="form-control form-control-sm bill-rate" value="${row.rate || ''}" readonly></td>
+                    <td><input type="number" class="form-control form-control-sm bill-amount" value="${row.amount || ''}" readonly></td>
+                    <td><button type="button" class="btn btn-outline-danger btn-sm delete-bill-row-btn"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+            updateBillGrandTotal();
+        }
     }
 
     if (logoutBtn) {
@@ -2239,6 +2276,7 @@ function initBillEntryPage() {
                 farmerName: document.getElementById('billFarmerName').value,
                 arrivalNo,
                 serialNo: arrivalNo,
+                station: document.getElementById('billStation')?.value || '',
                 date: document.getElementById('billDate').value,
                 rows: Array.from(billDetailsBody.querySelectorAll('tr')).map((row, index) => {
                     const baseRate = row.querySelector('.bill-base-rate')?.value || 0;
@@ -2255,6 +2293,8 @@ function initBillEntryPage() {
                         amount
                     };
                 }),
+                totalAmount: document.getElementById('billTotalAmount')?.textContent || '0',
+                expenseAmount: document.getElementById('billExpenseAmount')?.textContent || '0',
                 grandTotal: document.getElementById('grandTotalAmount').textContent
             };
 
@@ -2360,7 +2400,16 @@ function updateBillGrandTotal() {
         }
     });
 
-    const expenseAmount = Number(document.getElementById('billingExpenseSummary')?.dataset.expenseAmount || 0);
+    const expenseSummary = document.getElementById('billingExpenseSummary');
+    const arrivalNo = document.getElementById('billSerialNo')?.value || '';
+    const arrival = getPurchaseArrivalEntries().find(record => String(record.arrivalNo || '') === String(arrivalNo));
+    const freight = Number(arrival?.expenseDetails?.freightEntry || 0);
+    const billQuantity = Array.from(rows).reduce((sum, row) => sum + Number(row.querySelector('.bill-qty')?.value || 0), 0);
+    const arrivalQuantity = (arrival?.details || []).reduce((sum, detail) => sum + Number(detail.quantity || 0), 0);
+    const unloadingType = arrival?.expenseDetails?.unloadingType || 'Self';
+    const unloadingAmount = unloadingType === 'Mandi Labours' ? ((billQuantity || arrivalQuantity) / 1000) * 120 : 0;
+    const expenseAmount = arrival ? freight + unloadingAmount : Number(expenseSummary?.dataset.expenseAmount || 0);
+    if (expenseSummary) expenseSummary.dataset.expenseAmount = String(expenseAmount);
     const totalElement = document.getElementById('billTotalAmount');
     const expenseElement = document.getElementById('billExpenseAmount');
     if (totalElement) totalElement.textContent = total.toFixed(2);
@@ -2421,7 +2470,11 @@ function printBill() {
                     <div><strong>Station:</strong> ${billData.station}</div>
                     <div><strong>Date:</strong> ${billData.date}</div>
                 </div>
-                <div class="summary">Expenses: ${billData.expenses.replace(/\n/g, '<br>')}</div>
+                <div class="summary">
+                    <div>Total Amount: ${document.getElementById('billTotalAmount')?.textContent || '0.00'}</div>
+                    <div>Less: Expenses: ${document.getElementById('billExpenseAmount')?.textContent || '0.00'}</div>
+                    <div>${billData.expenses.replace(/\n/g, '<br>')}</div>
+                </div>
                 <table>
                     <thead>
                         <tr>
