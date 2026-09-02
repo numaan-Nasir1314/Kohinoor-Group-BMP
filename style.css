@@ -1,0 +1,802 @@
+/* ================================
+   Kohinoor Group Styles
+   ================================ */
+
+/* Root Variables */
+:root {
+    --primary: #0F172A;
+    --secondary: #1E3A8A;
+    --accent: #D4AF37;
+    --background: #F8FAFC;
+    --white: #FFFFFF;
+    --text-dark: #1E293B;
+    --text-light: #64748B;
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 20px 60px rgba(0, 0, 0, 0.15);
+    --transition: all 0.3s ease;
+}
+
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-dark);
+}
+
+.ledger-table-center th,
+.ledger-table-center td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.ledger-table-center td.text-end,
+.ledger-table-center th.text-end {
+    text-align: right !important;
+}
+
+@media print {
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .navbar,
+    .btn-back,
+    .btn,
+    .no-print,
+    .account-menu,
+    #createLedgerAccountBtn,
+    #printLedgerBtn,
+    #cancelLedgerAccountEditBtn,
+    #saveLedgerAccountBtn,
+    #createLedgerAccountForm {
+        display: none !important;
+    }
+
+    .dashboard-container,
+    .card,
+    .table,
+    .table-responsive {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .page-header,
+    .card-header,
+    .card {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
+
+/* ================================
+   Login Page Styles
+   ================================ */
+
+.login-body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 50%, var(--accent) 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    padding: 20px;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.login-container {
+    width: 100%;
+    max-width: 450px;
+    animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logo-section {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.logo-placeholder {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+    overflow: hidden;
+}
+
+.logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.login-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.login-subtitle {
+    font-size: 14px;
+    color: var(--text-light);
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-form .form-label {
+    font-weight: 500;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.login-form .input-group-text {
+    background: var(--background);
+    border: 2px solid #E2E8F0;
+    border-right: none;
+    color: var(--text-light);
+}
+
+.login-form .form-control {
+    border: 2px solid #E2E8F0;
+    padding: 12px 16px;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.login-form .form-control:focus {
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+.toggle-password {
+    cursor: pointer;
+    background: var(--background);
+    border: 2px solid #E2E8F0;
+    border-left: none;
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+.toggle-password:hover {
+    background: var(--secondary);
+    border-color: var(--secondary);
+    color: var(--white);
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.form-check-input {
+    border-color: #E2E8F0;
+}
+
+.form-check-input:checked {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+.form-check-label {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.forgot-password {
+    font-size: 13px;
+    color: var(--secondary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.forgot-password:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+.error-message {
+    display: none;
+    background: #FEE2E2;
+    color: #DC2626;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    border-left: 4px solid #DC2626;
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.btn-login {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(30, 58, 138, 0.3);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+.btn-loader {
+    display: none;
+}
+
+.btn-login.loading .btn-text {
+    display: none;
+}
+
+.btn-login.loading .btn-loader {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* ================================
+   Dashboard Styles
+   ================================ */
+
+.dashboard-body {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 58, 138, 0.6) 50%, rgba(212, 175, 55, 0.6) 100%),
+                url('images/Screenshot 2026-08-04 124344.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    position: relative;
+}
+
+.dashboard-body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(248, 250, 252, 0.3);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Navigation Bar */
+.navbar-custom {
+    background: var(--white);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+    padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+}
+
+.navbar-logo {
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.navbar-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.navbar-brand-text {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    transition: var(--transition);
+}
+
+.navbar-brand:hover .navbar-brand-text {
+    color: var(--secondary);
+}
+
+.navbar-toggler {
+    border: none;
+    padding: 8px;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+}
+
+.welcome-text {
+    font-size: 15px;
+    color: var(--text-dark);
+    font-weight: 500;
+    cursor: default;
+}
+
+.btn-logout {
+    background: linear-gradient(135deg, #DC2626, #B91C1C);
+    color: var(--white);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.btn-logout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+    color: var(--white);
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    padding: 40px 20px;
+    animation: fadeIn 0.5s ease;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.dashboard-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.dashboard-subtitle {
+    font-size: 16px;
+    color: var(--text-light);
+}
+
+/* Business Cards */
+.business-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.business-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-hover);
+}
+
+.card-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 36px;
+    color: var(--white);
+    transition: var(--transition);
+}
+
+/* Card 1 - Building Solutions */
+.business-card[data-business="building"] .card-icon {
+    background: linear-gradient(135deg, #3B82F6, #1E40AF);
+}
+
+.business-card[data-business="building"]:hover .card-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Card 2 - Estates */
+.business-card[data-business="estates"] .card-icon {
+    background: linear-gradient(135deg, #10B981, #047857);
+}
+
+.business-card[data-business="estates"]:hover .card-icon {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+/* Card 3 - Mango Traders */
+.business-card[data-business="mango"] .card-icon {
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+}
+
+.business-card[data-business="mango"]:hover .card-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Card 4 - Fuel Station */
+.business-card[data-business="fuel"] .card-icon {
+    background: linear-gradient(135deg, #EF4444, #B91C1C);
+}
+
+.business-card[data-business="fuel"]:hover .card-icon {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.card-description {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.btn-card {
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    color: var(--white);
+    border: none;
+    padding: 12px 32px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.btn-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(30, 58, 138, 0.3);
+    color: var(--white);
+}
+
+.btn-back {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary);
+    border: 1px solid rgba(30, 58, 138, 0.15);
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.btn-back:hover {
+    background: var(--white);
+    color: var(--secondary);
+}
+
+.module-card .card-icon {
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+}
+
+.module-card[data-business="purchases"] .card-icon {
+    background: linear-gradient(135deg, #10B981, #047857);
+}
+
+.form-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.purchase-form .form-label {
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.purchase-form .form-control,
+.purchase-form .form-select {
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    padding: 12px 14px;
+    box-shadow: none;
+}
+
+.purchase-form .form-control:focus,
+.purchase-form .form-select:focus {
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 0.2rem rgba(30, 58, 138, 0.15);
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.detail-section {
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    padding-top: 24px;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.detail-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+}
+
+.purchase-details-table {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.purchase-details-table th {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(15, 23, 42, 0.95));
+    color: var(--white);
+    font-weight: 600;
+}
+
+.purchase-details-table td,
+.purchase-details-table th {
+    vertical-align: middle;
+}
+
+.purchase-details-table .form-control-sm {
+    min-width: 140px;
+}
+
+.expense-grid {
+    background: rgba(248, 250, 252, 0.9);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.bill-info-grid {
+    background: rgba(248, 250, 252, 0.9);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.grand-total-section {
+    margin-top: 16px;
+    text-align: right;
+    padding-top: 12px;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+#totalExpense {
+    background: rgba(212, 175, 55, 0.12);
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.btn-form-submit {
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    color: var(--white);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.btn-form-submit:hover {
+    color: var(--white);
+    transform: translateY(-2px);
+}
+
+.btn-form-clear {
+    background: var(--accent);
+    color: var(--primary);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.btn-form-clear:hover {
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+/* ================================
+   Responsive Design
+   ================================ */
+
+/* Tablet */
+@media (max-width: 991px) {
+    .login-card {
+        padding: 32px;
+    }
+    
+    .login-title {
+        font-size: 24px;
+    }
+    
+    .dashboard-container {
+        padding: 30px 15px;
+    }
+    
+    .dashboard-title {
+        font-size: 28px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .login-card {
+        padding: 28px;
+    }
+    
+    .login-title {
+        font-size: 22px;
+    }
+    
+    .login-subtitle {
+        font-size: 13px;
+    }
+    
+    .form-options {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .navbar-brand-text {
+        font-size: 16px;
+    }
+    
+    .dashboard-container {
+        padding: 24px 12px;
+    }
+    
+    .page-header {
+        margin-bottom: 30px;
+    }
+    
+    .dashboard-title {
+        font-size: 24px;
+    }
+    
+    .dashboard-subtitle {
+        font-size: 14px;
+    }
+    
+    .business-card {
+        padding: 24px;
+    }
+
+    .form-card {
+        padding: 24px;
+    }
+
+    .detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .card-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 32px;
+    }
+    
+    .card-title {
+        font-size: 16px;
+    }
+    
+    .card-description {
+        font-size: 13px;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 24px;
+    }
+    
+    .logo-placeholder {
+        width: 70px;
+        height: 70px;
+        font-size: 32px;
+    }
+    
+    .login-title {
+        font-size: 20px;
+    }
+    
+    .btn-login {
+        padding: 12px;
+        font-size: 15px;
+    }
+}

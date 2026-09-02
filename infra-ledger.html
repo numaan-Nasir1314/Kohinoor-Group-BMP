@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ledger - Kohinoor Infra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="dashboard.html">
+                <div class="navbar-logo">
+                    <img src="images/logo.jpeg" alt="Kohinoor Group Logo" class="navbar-logo-img">
+                </div>
+                <span class="navbar-brand-text">Kohinoor Group</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="container">
+            <div class="page-header">
+                <button class="btn btn-back" id="backToDashboardBtn">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </button>
+                <h2 class="dashboard-title">Ledger</h2>
+                <p class="dashboard-subtitle">Tally-style creditor and debtor view with account-wise transaction drill-down.</p>
+            </div>
+
+            <div class="form-card mb-4">
+                <div class="detail-header">
+                    <h3 class="detail-title">Party Ledger</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped purchase-details-table">
+                        <thead>
+                            <tr>
+                                <th>Party</th>
+                                <th>Purchase</th>
+                                <th>Sale</th>
+                                <th>Balance</th>
+                                <th>Nature</th>
+                            </tr>
+                        </thead>
+                        <tbody id="infraLedgerPartyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="detail-header">
+                    <h3 class="detail-title" id="infraLedgerAccountTitle">Personal Transactions</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped purchase-details-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Item</th>
+                                <th>Invoice</th>
+                                <th>Amount</th>
+                                <th>Mode</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="infraLedgerDetailTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

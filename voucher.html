@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kohinoor Mango Voucher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="dashboard.html">
+                <div class="navbar-logo">
+                    <img src="images/logo.jpeg" alt="Kohinoor Group Logo" class="navbar-logo-img">
+                </div>
+                <span class="navbar-brand-text">Kohinoor Group</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <span class="nav-link welcome-text"><i class="fas fa-user-circle me-2"></i>Welcome Admin</span>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="container">
+            <div class="page-header">
+                <button class="btn btn-back" id="backToMangoBtn"><i class="fas fa-arrow-left me-2"></i>Back to Mango</button>
+                <h2 class="dashboard-title">Voucher</h2>
+                <p class="dashboard-subtitle">Create a payment or receipt voucher that posts to the Ledger.</p>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <div class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="card voucher-card payment-voucher-card" style="background-color: #ffe6e6; border: 2px solid #ffcccc; cursor: pointer;" data-voucher-type="Payment Voucher">
+                        <div class="card-body text-center">
+                            <div class="voucher-icon mb-3">
+                                <i class="fas fa-money-bill-wave" style="font-size: 3rem; color: #c41e3a;"></i>
+                            </div>
+                            <h5 class="card-title">Payment Voucher</h5>
+                            <p class="card-text text-muted">Record payment transactions to creditors and account holders.</p>
+                            <button class="btn btn-outline-danger voucher-btn">Create Payment Voucher</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="card voucher-card receipt-voucher-card" style="background-color: #e6f7f0; border: 2px solid #ccede6; cursor: pointer;" data-voucher-type="Receipt Voucher">
+                        <div class="card-body text-center">
+                            <div class="voucher-icon mb-3">
+                                <i class="fas fa-receipt" style="font-size: 3rem; color: #0d7a4d;"></i>
+                            </div>
+                            <h5 class="card-title">Receipt Voucher</h5>
+                            <p class="card-text text-muted">Record receipt transactions from debtors and account holders.</p>
+                            <button class="btn btn-outline-success voucher-btn">Create Receipt Voucher</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center mt-4">
+                <div class="col-lg-8 col-md-10">
+                    <div class="card voucher-card" style="background-color: #fff4cc; border: 2px solid #f4d35e; cursor: pointer;" data-voucher-type="Voucher List">
+                        <div class="card-body text-center">
+                            <div class="voucher-icon mb-3">
+                                <i class="fas fa-list-alt" style="font-size: 3rem; color: #8a6d00;"></i>
+                            </div>
+                            <h5 class="card-title">Voucher List</h5>
+                            <p class="card-text text-muted">View all payment and receipt vouchers created in the ledger.</p>
+                            <button class="btn btn-outline-warning voucher-btn">Open Voucher List</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="voucherFormContainer" class="row justify-content-center d-none mt-4">
+                <div class="col-lg-8">
+                    <button class="btn btn-secondary btn-sm mb-3" id="backToVoucherCards">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Voucher Types
+                    </button>
+                    <div class="card p-4 shadow-sm">
+                        <form id="voucherForm">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <h5 id="voucherTypeTitle"></h5>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="voucherNo" class="form-label">Voucher No.</label>
+                                    <input type="text" class="form-control" id="voucherNo" placeholder="Auto-generated" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="voucherDate" class="form-label">Date (DD/MM/YYYY)</label>
+                                    <input type="date" class="form-control" id="voucherDate" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="voucherAccountName" class="form-label">Account Name</label>
+                                    <input type="text" class="form-control" id="voucherAccountName" list="ledgerNameSuggestions" placeholder="Enter account holder" required>
+                                    <datalist id="ledgerNameSuggestions"></datalist>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="voucherStation" class="form-label">Station</label>
+                                    <input type="text" class="form-control" id="voucherStation" list="ledgerStationSuggestions" placeholder="Enter station" required>
+                                    <datalist id="ledgerStationSuggestions"></datalist>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="voucherId" class="form-label">Account ID</label>
+                                    <input type="text" class="form-control" id="voucherId" list="ledgerIdSuggestions" readonly placeholder="Auto-generated ID">
+                                    <datalist id="ledgerIdSuggestions"></datalist>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="voucherAmount" class="form-label">Amount</label>
+                                    <input type="number" class="form-control" id="voucherAmount" min="0" step="0.01" placeholder="0.00" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="voucherMode" class="form-label">Mode</label>
+                                    <select class="form-select" id="voucherMode">
+                                        <option value="Cash">Cash</option>
+                                        <option value="Bank">Bank</option>
+                                        <option value="UPI">UPI</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="reset" class="btn btn-outline-secondary">Clear</button>
+                                <button type="submit" class="btn btn-primary">Post Voucher</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="voucherListSection" class="row justify-content-center mt-4 d-none">
+                <div class="col-lg-12">
+                    <div class="card p-4 shadow-sm" style="min-height: 540px;">
+                        <div class="detail-header mb-3">
+                            <h4 class="detail-title">Voucher List</h4>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="voucherListSearch" class="form-control form-control-lg" placeholder="Search by type, date, name, ID, amount, station, mode">
+                        </div>
+                        <div class="table-responsive" style="max-height: 430px; overflow: auto;">
+                            <table class="table table-bordered align-middle table-hover" style="min-width: 1200px;">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Date</th>
+                                        <th>Name</th>
+                                        <th>ID</th>
+                                        <th>Amount</th>
+                                        <th>Station</th>
+                                        <th>Mode</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="voucherListTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kohinoor Ledger</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="dashboard.html">
+                <div class="navbar-logo">
+                    <img src="images/logo.jpeg" alt="Kohinoor Group Logo" class="navbar-logo-img">
+                </div>
+                <span class="navbar-brand-text">Kohinoor Group</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <span class="nav-link welcome-text"><i class="fas fa-user-circle me-2"></i>Welcome Admin</span>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container" id="ledgerPage">
+        <div class="container-fluid px-3 px-lg-4">
+            <div class="page-header text-center">
+                <button class="btn btn-back" id="backToMangoBtn"><i class="fas fa-arrow-left me-2"></i>Back to Mango</button>
+                <h2 class="dashboard-title">Ledger</h2>
+                <p class="dashboard-subtitle">Central account-wise view of all purchase, sale, payment and receipt transactions.</p>
+            </div>
+
+            <div class="card p-3 mb-4 text-center">
+                <div class="d-flex justify-content-between flex-wrap align-items-center gap-2">
+                    <h5 class="mb-0 w-100">Accounts</h5>
+                    <div class="d-flex gap-2 align-items-center flex-wrap justify-content-center w-100 mt-2">
+                        <button type="button" class="btn btn-primary btn-sm" id="createLedgerAccountBtn">Create Account</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="printLedgerBtn">Print</button>
+                    </div>
+                </div>
+
+                <form id="createLedgerAccountForm" class="row g-3 mt-2 d-none justify-content-center text-start">
+                    <div class="col-md-3">
+                        <label class="form-label">Account Name</label>
+                        <input type="text" class="form-control" id="ledgerAccountName" placeholder="Account holder name">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" id="ledgerAccountType">
+                            <option value="Farmer">Farmer</option>
+                            <option value="Customer">Customer</option>
+                            <option value="Supplier">Supplier</option>
+                            <option value="Cash Sale Customer">Cash Sale Customer</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Station</label>
+                        <input type="text" class="form-control" id="ledgerStation" placeholder="Station">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">ID</label>
+                        <input type="number" class="form-control" id="ledgerFarmerId" placeholder="Farmer only" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Proprietor</label>
+                        <input type="text" class="form-control" id="ledgerAccountProprietor" placeholder="Optional">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Folio No.</label>
+                        <input type="text" class="form-control" id="ledgerAccountFolio" placeholder="Optional">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">Prefix</label>
+                        <input type="text" class="form-control" id="ledgerIdPrefix" readonly placeholder="Auto">
+                    </div>
+                    <input type="hidden" id="ledgerAccountEditId">
+                    <div class="col-12 text-center d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="cancelLedgerAccountEditBtn">Cancel</button>
+                        <button type="submit" class="btn btn-success btn-sm" id="saveLedgerAccountBtn">Save Account</button>
+                    </div>
+                </form>
+
+                <div class="mt-3 text-start">
+                    <label for="ledgerSearchInput" class="form-label">Search Account</label>
+                    <input type="text" id="ledgerSearchInput" class="form-control" placeholder="Search by name, station, or ID">
+                </div>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <div class="col-12">
+                    <div class="card h-100">
+                        <div class="card-header bg-light text-center">
+                            <h6 class="mb-0">Account List</h6>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm mb-0 align-middle ledger-table-center">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Station</th>
+                                        <th style="width: 90px; min-width: 90px;">Folio</th>
+                                        <th class="text-end">Debit</th>
+                                        <th class="text-end">Credit</th>
+                                        <th class="text-center" style="width: 70px; min-width: 70px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ledgerAccountTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

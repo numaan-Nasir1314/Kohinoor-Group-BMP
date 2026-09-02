@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kohinoor Estates - Properties</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<script src="script.js"></script>
+<body>
+
+    <header class="topbar">
+        <h1>Kohinoor Estates & Developers</h1>
+        <p>Real Estate Management System</p>
+    </header>
+
+    <nav class="navbar">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="properties.html">Properties</a>
+        <a href="tenants.html">Tenants</a>
+        <a href="billing.html">Billing</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+    </nav>
+
+<main class="container">
+
+    <div class="page-title">
+        <h2>Properties</h2>
+        <p>Manage all properties in your real estate portfolio</p>
+    </div>
+
+    <div class="card">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div>
+                <h3>Property List</h3>
+                <p style="color:#6b7280; margin-top:5px;">
+                    View and manage your properties
+                </p>
+            </div>
+
+            <button class="btn"
+            onclick="addPropertyRow()">+ Add Property
+        </button>
+        </div>
+
+        <div class="table-container">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property ID</th>
+                        <th>Property Name</th>
+                        <th>Location</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+<tbody>
+    <tr>
+        <td>
+            <input type="text" placeholder="Enter Property ID">
+        </td>
+
+        <td>
+            <input type="text" placeholder="Enter Property Name">
+        </td>
+
+        <td>
+            <input type="text" placeholder="Enter Location">
+        </td>
+
+        <td>
+            <select>
+                <option value="">Select Type</option>
+                <option>Residential</option>
+                <option>Commercial</option>
+                <option>Apartment</option>
+            </select>
+        </td>
+
+        <td>
+            <select>
+                <option value="">Select Status</option>
+                <option>Available</option>
+                <option>Occupied</option>
+                <option>Under Maintenance</option>
+            </select>
+        </td>
+    </tr>
+
+  </tbody>
+
+</table>
+        </div>
+     
+    </div>
+
+</main>
+</body>
+</html>
