@@ -142,7 +142,25 @@ function setupGlobalKeyboardNavigation() {
         const isTextField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName);
         const rowActionButtons = Array.from(document.querySelectorAll('[data-action="select-account"], [data-action="toggle-account-menu"], [data-action="edit-account"], [data-action="delete-account"]'));
 
-        if (isTextField) return;
+        if (isTextField && e.key === 'Enter' && active.form) {
+            e.preventDefault();
+            const fields = Array.from(active.form.querySelectorAll('input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])'));
+            const next = fields[fields.indexOf(active) + 1];
+            if (next) next.focus();
+            else active.form.requestSubmit();
+            return;
+        }
+
+        if (isTextField && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && active.form) {
+            const fields = Array.from(active.form.querySelectorAll('input:not([disabled]), select:not([disabled]), textarea:not([disabled])'));
+            const currentIndex = fields.indexOf(active);
+            if (currentIndex >= 0 && fields.length) {
+                e.preventDefault();
+                const direction = e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 1;
+                fields[(currentIndex + direction + fields.length) % fields.length].focus();
+            }
+            return;
+        }
 
         if ((e.key === 'ArrowRight' || e.key === 'ArrowDown') && rowActionButtons.length) {
             e.preventDefault();
@@ -1055,16 +1073,7 @@ function initLedgerAccountPage() {
         accountMeta.textContent = `ID: ${idValue} | Type: ${typeValue} | Station: ${stationValue} | Proprietor: ${proprietorValue} | Folio: ${folioValue}`;
     }
 
-    const transactions = getLaserTransactions().filter(record => {
-        if (!record) return false;
-        const sameName = record.name === selectedAccount.name;
-        const sameId = !!selectedAccount.id && record.id === selectedAccount.id;
-        return sameName || sameId;
-    }).sort((a, b) => {
-        const aDate = formatDateToYYYYMMDD(a.date || '');
-        const bDate = formatDateToYYYYMMDD(b.date || '');
-        return new Date(aDate) - new Date(bDate);
-    });
+    const transactions = getPersonalLedgerTransactions(selectedAccount);
 
     if (detailTableBody) {
         detailTableBody.innerHTML = '';
@@ -1079,6 +1088,10 @@ function initLedgerAccountPage() {
             const debit = ['purchase', 'receipt voucher'].includes((source || '').toLowerCase()) ? Number(record.amount || record.paid || 0) : 0;
             const credit = ['sale', 'payment voucher'].includes((source || '').toLowerCase()) ? Number(record.amount || record.paid || 0) : 0;
             const row = document.createElement('tr');
+            row.title = 'Click to view transaction details';
+            row.addEventListener('click', function() {
+                alert(record.details || `${source}\nDate: ${record.date || ''}\nAmount: ${record.amount || 0}\nMode: ${record.mode || 'Cash'}`);
+            });
             row.innerHTML = `
                 <td>${record.date || ''}</td>
                 <td>${source || 'Entry'}</td>
@@ -1090,6 +1103,26 @@ function initLedgerAccountPage() {
             detailTableBody.appendChild(row);
         });
     }
+}
+
+function getPersonalLedgerTransactions(account) {
+    const transactions = getLaserTransactions().filter(record => {
+        if (!record) return false;
+        return (account.name && record.name === account.name) || (account.id && record.id === account.id);
+    });
+    Object.values(getArrivalBillHistory()).flat().forEach(bill => {
+        if (!bill || bill.farmerName !== account.name) return;
+        transactions.push({
+            ...bill,
+            source: 'Purchase Bill',
+            name: bill.farmerName,
+            amount: bill.grandTotal || 0,
+            mode: 'Bill',
+            voucherNo: bill.arrivalNo,
+            details: `Purchase Bill\nArrival No.: ${bill.arrivalNo}\nDate: ${bill.date}\nGrand Total: ${bill.grandTotal}`
+        });
+    });
+    return transactions.sort((a, b) => new Date(formatDateToYYYYMMDD(a.date || '')) - new Date(formatDateToYYYYMMDD(b.date || '')));
 }
 
 function renderVoucherList(searchTerm = '') {
@@ -1607,7 +1640,7 @@ function renderPurchaseArrivalList(searchTerm = '') {
             <td>${record.date || ''}</td>
             <td>${record.name || ''}</td>
             <td>${record.station || ''}</td>
-            <td>${record.vehicleType || record.vehicle || ''}</td>
+            <td>${record.vehicleCount || (Array.isArray(record.vehicleTypes) ? record.vehicleTypes.length : (record.vehicleType ? 1 : 0))}</td>
             <td><button type="button" class="btn btn-sm btn-outline-primary" data-arrival-no="${record.arrivalNo || ''}" data-action="view-arrival">View</button></td>
         `;
         tableBody.appendChild(row);
@@ -1840,6 +1873,7 @@ function initPurchaseEntryPage() {
             if (selected.expenseDetails) {
                 const expense = selected.expenseDetails;
                 if (freightEntry) freightEntry.value = expense.freightEntry || '';
+                if (document.getElementById('expenseNarration')) document.getElementById('expenseNarration').value = expense.narration || '';
                 if (inchargeNameInput) inchargeNameInput.value = expense.inchargeName || '';
                 if (unloadingTypeInput) unloadingTypeInput.value = expense.unloadingType || 'Self';
                 if (document.getElementById('purchasePaymentMode')) document.getElementById('purchasePaymentMode').value = expense.paymentMode || selected.mode || 'Cash';
@@ -1910,6 +1944,7 @@ function initPurchaseEntryPage() {
             const expenseData = {
                 freightEntry: freightEntry ? freightEntry.value : '',
                 paymentMode: document.getElementById('purchasePaymentMode')?.value || 'Cash',
+                narration: document.getElementById('expenseNarration')?.value || '',
                 inchargeName: inchargeNameInput ? inchargeNameInput.value : '',
                 unloadingType: unloadingTypeInput ? unloadingTypeInput.value : 'Self'
             };
@@ -1930,11 +1965,12 @@ function initPurchaseEntryPage() {
                 expenseDetails: expenseData
             };
 
-            saveLaserTransaction(purchaseRecord);
+            const previousArrival = getPurchaseArrivalEntries().find(record => String(record.arrivalNo || '') === String(purchaseRecord.arrivalNo || ''));
+            const savedArrival = upsertPurchaseArrival(purchaseRecord);
             renderPurchaseArrivalList(arrivalSearchInput ? arrivalSearchInput.value : '');
 
             console.log('Purchase Entry Saved:', { headerData, detailRows, expenseData, purchaseRecord });
-            alert('Purchase entry saved successfully.');
+            alert(`${previousArrival ? 'Arrival updated' : 'Purchase entry saved'} successfully.${describeArrivalChanges(previousArrival, savedArrival)}`);
             purchaseForm.reset();
             resetDetailRows();
             if (arrivalNoInput) {
@@ -2073,6 +2109,8 @@ function populateArrivalBillingExpense(arrivalNo) {
 
     if (!selectedArrival || !Object.keys(expenseDetails).length) {
         expenseSummary.innerHTML = '<p class="mb-0">No expense details available for this arrival.</p>';
+        expenseSummary.dataset.expenseAmount = '0';
+        updateBillGrandTotal();
         return;
     }
 
@@ -2087,6 +2125,8 @@ function populateArrivalBillingExpense(arrivalNo) {
         <div class="mb-2"><strong>Incharge:</strong> ${inchargeName}</div>
         <div class="mb-2"><strong>Unloading:</strong> ${unloadingType}</div>
     `;
+    expenseSummary.dataset.expenseAmount = String(Number(freightValue) || 0);
+    updateBillGrandTotal();
 }
 
 function initBillEntryPage() {
@@ -2320,7 +2360,12 @@ function updateBillGrandTotal() {
         }
     });
 
-    grandTotalElement.textContent = total.toFixed(2);
+    const expenseAmount = Number(document.getElementById('billingExpenseSummary')?.dataset.expenseAmount || 0);
+    const totalElement = document.getElementById('billTotalAmount');
+    const expenseElement = document.getElementById('billExpenseAmount');
+    if (totalElement) totalElement.textContent = total.toFixed(2);
+    if (expenseElement) expenseElement.textContent = expenseAmount.toFixed(2);
+    grandTotalElement.textContent = Math.max(total - expenseAmount, 0).toFixed(2);
 }
 
 function printBill() {
@@ -2464,8 +2509,8 @@ function getNextArrivalNumber() {
     const purchaseRecords = getMangoPurchaseRecords();
     const numericArrivalNos = purchaseRecords
         .map(record => {
-            const id = record && record.id !== undefined ? String(record.id).trim() : '';
-            const cleaned = id.replace(/[^0-9]/g, '');
+            const arrivalNo = record && record.arrivalNo !== undefined ? String(record.arrivalNo).trim() : '';
+            const cleaned = arrivalNo.replace(/[^0-9]/g, '');
             return cleaned ? Number(cleaned) : null;
         })
         .filter(value => Number.isFinite(value) && value > 0);
@@ -2502,6 +2547,33 @@ function saveLaserTransaction(transaction) {
             ledgerFolio: transaction.ledgerFolio || ''
         });
     }
+}
+
+function upsertPurchaseArrival(transaction) {
+    const transactions = getLaserTransactions();
+    const arrivalNo = String(transaction.arrivalNo || '').trim();
+    const matchingIndexes = transactions
+        .map((record, index) => ({ record, index }))
+        .filter(item => String(item.record?.source || '').toLowerCase() === 'purchase' && String(item.record.arrivalNo || '').trim() === arrivalNo)
+        .map(item => item.index);
+    const existingIndex = matchingIndexes[0] ?? -1;
+    matchingIndexes.slice(1).reverse().forEach(index => transactions.splice(index, 1));
+    const savedRecord = existingIndex >= 0
+        ? { ...transactions[existingIndex], ...transaction, updatedAt: new Date().toISOString() }
+        : { ...transaction, createdAt: new Date().toISOString() };
+    if (existingIndex >= 0) transactions[existingIndex] = savedRecord;
+    else transactions.push(savedRecord);
+    localStorage.setItem(LASER_STORAGE_KEY, JSON.stringify(transactions));
+    upsertMangoLedgerAccount({ id: savedRecord.id, name: savedRecord.name, type: 'Farmer', station: savedRecord.station });
+    return savedRecord;
+}
+
+function describeArrivalChanges(previous, next) {
+    if (!previous) return '';
+    const previousFreight = previous.expenseDetails?.freightEntry || '0';
+    const nextFreight = next.expenseDetails?.freightEntry || '0';
+    if (String(previousFreight) === String(nextFreight)) return '';
+    return `\nPrevious Freight: ${previousFreight}\nNew Freight: ${nextFreight}\nUpdated records: Arrival, Purchase Bill, Voucher and Ledger Entry.`;
 }
 
 function populateLaserTable() {
