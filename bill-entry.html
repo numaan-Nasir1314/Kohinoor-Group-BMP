@@ -59,12 +59,16 @@
                             <input type="text" class="form-control" id="billFarmerName" placeholder="Enter farmer name">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Arrival No. / SL.No.</label>
+                            <label class="form-label">Arrival No.</label>
                             <input type="text" class="form-control" id="billSerialNo" placeholder="Arrival no.">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Date (DD/MM/YYYY)</label>
+                            <label class="form-label">Date</label>
                             <input type="date" class="form-control" id="billDate">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Station</label>
+                            <input type="text" class="form-control" id="billStation" readonly>
                         </div>
                     </div>
 
@@ -91,8 +95,8 @@
                                     <table class="table purchase-details-table" id="billDetailsTable">
                                         <thead>
                                             <tr>
-                                                <th></th>
-                                                <th>Arrival No./SL.No.</th>
+                                                <th class="bill-no-column">No.</th>
+                                                <th class="bill-sl-no-column">SL.No.</th>
                                                 <th>Variety</th>
                                                 <th>Qty</th>
                                                 <th>Rate</th>
@@ -105,10 +109,9 @@
                                                 <td>
                                                     <div class="input-group input-group-sm">
                                                         <input type="number" class="form-control bill-base-rate" min="0" step="0.01" placeholder="0">
-                                                        <span class="input-group-text">/-</span>
                                                     </div>
                                                 </td>
-                                                <td><input type="text" class="form-control form-control-sm bill-arrival-no" readonly placeholder="Arrival no."></td>
+                                                <td class="bill-sl-no-cell">1</td>
                                                 <td><input type="text" class="form-control form-control-sm bill-variety" placeholder="Enter variety"></td>
                                                 <td><input type="number" class="form-control form-control-sm bill-qty" min="0" step="1" placeholder="0"></td>
                                                 <td><input type="number" class="form-control form-control-sm bill-rate" min="0" step="0.01" readonly placeholder="0"></td>

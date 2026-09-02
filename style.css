@@ -40,6 +40,16 @@ body {
     text-align: right !important;
 }
 
+.bill-no-column {
+    min-width: 110px;
+}
+
+.bill-sl-no-column,
+.bill-sl-no-cell {
+    min-width: 70px;
+    text-align: center;
+}
+
 @media print {
     body {
         background: #fff !important;

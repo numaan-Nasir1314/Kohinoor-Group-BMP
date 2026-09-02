@@ -2110,9 +2110,13 @@ function initBillEntryPage() {
         const billArrivalField = document.getElementById('billSerialNo');
         if (billArrivalField) billArrivalField.value = selectedArrivalNo;
         const billFarmerNameField = document.getElementById('billFarmerName');
+        const billStationField = document.getElementById('billStation');
         const selectedArrival = getPurchaseArrivalEntries().find(record => String(record.arrivalNo || '') === String(selectedArrivalNo || ''));
         if (selectedArrival && billFarmerNameField) {
             billFarmerNameField.value = selectedArrival.name || '';
+        }
+        if (selectedArrival && billStationField) {
+            billStationField.value = selectedArrival.station || '';
         }
         populateArrivalBillingExpense(selectedArrivalNo);
     }
@@ -2194,14 +2198,12 @@ function initBillEntryPage() {
                 serialNo: arrivalNo,
                 date: document.getElementById('billDate').value,
                 rows: Array.from(billDetailsBody.querySelectorAll('tr')).map((row, index) => {
-                    const currentArrivalNo = row.querySelector('.bill-arrival-no')?.value || arrivalNo;
                     const baseRate = row.querySelector('.bill-base-rate')?.value || 0;
                     const variety = row.querySelector('.bill-variety')?.value || '';
                     const qty = row.querySelector('.bill-qty')?.value || 0;
                     const rate = row.querySelector('.bill-rate')?.value || 0;
                     const amount = row.querySelector('.bill-amount')?.value || 0;
                     return {
-                        arrivalNo: currentArrivalNo,
                         baseRate,
                         serialNo: index + 1,
                         variety,
@@ -2235,7 +2237,9 @@ function populateBillDefaults() {
 
     const billFarmerName = document.getElementById('billFarmerName');
     const billSerialNo = document.getElementById('billSerialNo');
+    const billStation = document.getElementById('billStation');
     const billDate = document.getElementById('billDate');
+    const stationField = document.getElementById('stationName');
 
     if (billFarmerName && farmerNameField) {
         billFarmerName.value = farmerNameField.value;
@@ -2243,17 +2247,14 @@ function populateBillDefaults() {
     if (billSerialNo && arrivalNoField && !billSerialNo.value.trim()) {
         billSerialNo.value = arrivalNoField.value;
     }
+    if (billStation && stationField) {
+        billStation.value = stationField.value;
+    }
     if (billDate && dateField) {
         billDate.value = dateField.value;
     }
 
-    const billRows = document.querySelectorAll('#billDetailsBody tr');
-    billRows.forEach(row => {
-        const arrivalInput = row.querySelector('.bill-arrival-no');
-        if (arrivalInput && billSerialNo && billSerialNo.value.trim()) {
-            arrivalInput.value = billSerialNo.value.trim();
-        }
-    });
+    renumberBillRows();
 }
 
 function addBillDetailRow() {
@@ -2261,16 +2262,14 @@ function addBillDetailRow() {
     if (!billDetailsBody) return;
 
     const rowCount = billDetailsBody.children.length + 1;
-    const arrivalNoValue = document.getElementById('billSerialNo')?.value || '';
     const newRow = document.createElement('tr');
     newRow.innerHTML = `
         <td>
             <div class="input-group input-group-sm">
                 <input type="number" class="form-control bill-base-rate" min="0" step="0.01" placeholder="0">
-                <span class="input-group-text">/-</span>
             </div>
         </td>
-        <td><input type="text" class="form-control form-control-sm bill-arrival-no" value="${arrivalNoValue}" readonly></td>
+        <td class="bill-sl-no-cell">${rowCount}</td>
         <td><input type="text" class="form-control form-control-sm bill-variety" placeholder="Enter variety"></td>
         <td><input type="number" class="form-control form-control-sm bill-qty" min="0" step="1" placeholder="0"></td>
         <td><input type="number" class="form-control form-control-sm bill-rate" min="0" step="0.01" readonly placeholder="0"></td>
@@ -2283,10 +2282,9 @@ function addBillDetailRow() {
 function renumberBillRows() {
     const rows = document.querySelectorAll('#billDetailsBody tr');
     rows.forEach((row, index) => {
-        const slCell = row.querySelector('.bill-arrival-no');
+        const slCell = row.querySelector('.bill-sl-no-cell');
         if (slCell) {
-            const billSerialNo = document.getElementById('billSerialNo')?.value || '';
-            slCell.value = billSerialNo || String(index + 1);
+            slCell.textContent = String(index + 1);
         }
     });
 }
@@ -2326,23 +2324,25 @@ function printBill() {
     const billData = {
         farmerName: document.getElementById('billFarmerName').value || 'N/A',
         serialNo: document.getElementById('billSerialNo').value || 'N/A',
+        station: document.getElementById('billStation')?.value || 'N/A',
         date: document.getElementById('billDate').value || 'N/A',
-        actualRate: document.querySelector('#billDetailsBody .bill-actual-rate')?.value || 'N/A'
+        expenses: document.getElementById('billingExpenseSummary')?.innerText || 'No expense details available.'
     };
 
     const rows = Array.from(document.querySelectorAll('#billDetailsBody tr')).map((row, index) => {
-        const inputs = row.querySelectorAll('input');
         return {
+            no: row.querySelector('.bill-base-rate')?.value || '',
             serialNo: index + 1,
-            variety: inputs[1].value || '',
-            qty: inputs[2].value || '',
-            rate: inputs[3].value || '',
-            amount: inputs[4].value || ''
+            variety: row.querySelector('.bill-variety')?.value || '',
+            qty: row.querySelector('.bill-qty')?.value || '',
+            rate: row.querySelector('.bill-rate')?.value || '',
+            amount: row.querySelector('.bill-amount')?.value || ''
         };
     });
 
     const rowsMarkup = rows.map(row => `
         <tr>
+            <td>${row.no}</td>
             <td>${row.serialNo}</td>
             <td>${row.variety}</td>
             <td>${row.qty}</td>
@@ -2369,14 +2369,16 @@ function printBill() {
                 <h2>Kohinoor Group - Bill</h2>
                 <div class="meta">
                     <div><strong>Farmer Name:</strong> ${billData.farmerName}</div>
-                    <div><strong>S. No.:</strong> ${billData.serialNo}</div>
+                    <div><strong>Arrival No.:</strong> ${billData.serialNo}</div>
+                    <div><strong>Station:</strong> ${billData.station}</div>
                     <div><strong>Date:</strong> ${billData.date}</div>
-                    <div><strong>Actual Rate:</strong> ${billData.actualRate}</div>
                 </div>
+                <div class="summary">Expenses: ${billData.expenses.replace(/\n/g, '<br>')}</div>
                 <table>
                     <thead>
                         <tr>
-                            <th>S. No.</th>
+                            <th>No.</th>
+                            <th>SL.No.</th>
                             <th>Variety</th>
                             <th>Qty</th>
                             <th>Rate</th>
@@ -2418,16 +2420,14 @@ function resetBillRows() {
     const billDetailsBody = document.getElementById('billDetailsBody');
     const grandTotalElement = document.getElementById('grandTotalAmount');
     if (!billDetailsBody) return;
-    const arrivalNoValue = document.getElementById('billSerialNo')?.value || '';
     billDetailsBody.innerHTML = `
         <tr>
             <td>
                 <div class="input-group input-group-sm">
                     <input type="number" class="form-control bill-base-rate" min="0" step="0.01" placeholder="0">
-                    <span class="input-group-text">/-</span>
                 </div>
             </td>
-            <td><input type="text" class="form-control form-control-sm bill-arrival-no" value="${arrivalNoValue}" readonly></td>
+            <td class="bill-sl-no-cell">1</td>
             <td><input type="text" class="form-control form-control-sm bill-variety" placeholder="Enter variety"></td>
             <td><input type="number" class="form-control form-control-sm bill-qty" min="0" step="1" placeholder="0"></td>
             <td><input type="number" class="form-control form-control-sm bill-rate" min="0" step="0.01" readonly placeholder="0"></td>
