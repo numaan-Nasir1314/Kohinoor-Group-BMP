@@ -46,6 +46,10 @@ function getTodayDDMMYYYY() {
     return `${day}/${month}/${year}`;
 }
 
+function formatDateForDisplay(dateStr) {
+    return formatDateToDDMMYYYY(formatDateToYYYYMMDD(dateStr || ''));
+}
+
 // Check if user is logged in
 function checkAuth() {
     const isLoggedIn = sessionStorage.getItem('isLoggedIn');
@@ -140,7 +144,6 @@ function setupGlobalKeyboardNavigation() {
         if (!active) return;
 
         const isTextField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName);
-        const rowActionButtons = Array.from(document.querySelectorAll('[data-action="select-account"], [data-action="toggle-account-menu"], [data-action="edit-account"], [data-action="delete-account"]'));
 
         if (isTextField && e.key === 'Enter' && active.form) {
             e.preventDefault();
@@ -160,20 +163,6 @@ function setupGlobalKeyboardNavigation() {
                 fields[(currentIndex + direction + fields.length) % fields.length].focus();
             }
             return;
-        }
-
-        if ((e.key === 'ArrowRight' || e.key === 'ArrowDown') && rowActionButtons.length) {
-            e.preventDefault();
-            const currentIndex = rowActionButtons.indexOf(active);
-            const next = rowActionButtons[(currentIndex >= 0 ? currentIndex + 1 : 0) % rowActionButtons.length];
-            if (next && typeof next.focus === 'function') next.focus();
-        }
-
-        if ((e.key === 'ArrowLeft' || e.key === 'ArrowUp') && rowActionButtons.length) {
-            e.preventDefault();
-            const currentIndex = rowActionButtons.indexOf(active);
-            const prev = rowActionButtons[(currentIndex - 1 + rowActionButtons.length) % rowActionButtons.length];
-            if (prev && typeof prev.focus === 'function') prev.focus();
         }
 
         if (e.key === 'Enter' && active && (active.tagName === 'BUTTON' || active.tagName === 'A')) {
@@ -197,7 +186,15 @@ function createNormalizedLedgerId(prefixValue, numericValue) {
 }
 
 function createDistinctLedgerPrefix(name, station) {
-    const cleanName = String(name || '').trim();
+                });
+                billDetailsBody.addEventListener('keydown', function(e) {
+                    if (e.key !== 'Enter' || !e.target.matches('.bill-base-rate, .bill-variety, .bill-qty')) return;
+                    const row = e.target.closest('tr');
+                    if (!row || row !== billDetailsBody.lastElementChild) return;
+                    e.preventDefault();
+                    addBillDetailRow();
+                    billDetailsBody.lastElementChild.querySelector('.bill-base-rate')?.focus();
+                });
     const cleanStation = String(station || '').trim();
     const nameWords = cleanName.split(/\s+/).filter(Boolean);
     const stationWords = cleanStation.split(/\s+/).filter(Boolean);
@@ -469,8 +466,6 @@ function initLaserPage() {
             }
         });
     }
-
-    enableLedgerKeyboardNavigation();
 
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', function() {
@@ -1012,7 +1007,7 @@ function renderMangoLedgerDetails(accountId) {
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${record.date || ''}</td>
+            <td>${formatDateForDisplay(record.date)}</td>
             <td>${source || 'Entry'}</td>
             <td>${record.voucherNo || record.invoiceId || record.arrivalNo || record.id || ''}</td>
             <td class="text-end">${isDebit ? amount.toFixed(2) : '0.00'}</td>
@@ -1090,7 +1085,7 @@ function initLedgerAccountPage() {
                 }
             });
             row.innerHTML = `
-                <td>${record.date || ''}</td>
+                <td>${formatDateForDisplay(record.date)}</td>
                 <td>${source || 'Entry'}</td>
                 <td>${record.voucherNo || record.invoiceId || record.arrivalNo || record.id || ''}</td>
                 <td>${source.toLowerCase() === 'purchase bill' ? '' : (record.mode || 'Cash')}</td>
@@ -1246,6 +1241,9 @@ function initVoucherPage() {
         if (voucherNoInput) voucherNoInput.value = record.voucherNo || '';
         if (document.getElementById('voucherMode')) {
             document.getElementById('voucherMode').value = record.mode || 'Cash';
+        }
+        if (document.getElementById('voucherNarration')) {
+            document.getElementById('voucherNarration').value = record.narration || '';
         }
     }
 
@@ -1426,6 +1424,7 @@ function initVoucherPage() {
             const dateValue = document.getElementById('voucherDate')?.value;
             const date = dateValue ? formatDateToDDMMYYYY(dateValue) : getTodayDDMMYYYY();
             const mode = document.getElementById('voucherMode')?.value || 'Cash';
+            const narration = document.getElementById('voucherNarration')?.value.trim() || '';
 
             if (!selectedVoucherType || !name || !station || !id || !voucherNo || !amount) {
                 alert('Please complete all voucher fields.');
@@ -1446,7 +1445,8 @@ function initVoucherPage() {
                 amount: String(amount),
                 paid: '0',
                 voucherNo,
-                mode
+                mode,
+                narration
             };
 
             if (targetIndex >= 0) {
@@ -1533,7 +1533,7 @@ function searchLedger() {
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${record.date || ''}</td>
+            <td>${formatDateForDisplay(record.date)}</td>
             <td>${record.source || ''}</td>
             <td>${record.mode || ''}</td>
             <td class="text-end">${credit.toFixed(2)}</td>
@@ -1652,7 +1652,7 @@ function renderPurchaseArrivalList(searchTerm = '') {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${record.arrivalNo || ''}</td>
-            <td>${record.date || ''}</td>
+            <td>${formatDateForDisplay(record.date)}</td>
             <td>${record.name || ''}</td>
             <td>${record.station || ''}</td>
             <td>${record.vehicleCount || (Array.isArray(record.vehicleTypes) ? record.vehicleTypes.length : (record.vehicleType ? 1 : 0))}</td>
@@ -1703,10 +1703,10 @@ function initPurchaseEntryPage() {
         }
 
         vehicleTypeRowsContainer.style.display = 'block';
-        const currentValues = Array.from(vehicleTypeRows.querySelectorAll('select')).map(select => select.value).filter(Boolean);
+        const currentValues = Array.from(vehicleTypeRows.querySelectorAll('select')).map(select => select.value);
         vehicleTypeRows.innerHTML = '';
 
-        for (let index = 0; index < count; index += 1) {
+        for (let index = 1; index < count; index += 1) {
             const wrapper = document.createElement('div');
             wrapper.className = 'row g-2 mb-2';
             wrapper.innerHTML = `
@@ -1727,11 +1727,13 @@ function initPurchaseEntryPage() {
                 </div>
             `;
             const select = wrapper.querySelector('select');
-            if (select && currentValues[index]) {
-                select.value = currentValues[index];
+            if (select && currentValues[index - 1]) {
+                select.value = currentValues[index - 1];
             }
             vehicleTypeRows.appendChild(wrapper);
         }
+        const newVehicle = vehicleTypeRows.querySelectorAll('select')[currentValues.length];
+        if (newVehicle && count - 1 > currentValues.length) newVehicle.focus();
     }
 
     function updateFarmerIdField() {
@@ -1899,7 +1901,7 @@ function initPurchaseEntryPage() {
                 renderVehicleTypeRows();
                 const typeSelects = document.querySelectorAll('#vehicleTypeRows select.vehicle-type-row-select');
                 typeSelects.forEach((select, index) => {
-                    select.value = selected.vehicleTypes[index] || '';
+                    select.value = selected.vehicleTypes[index + 1] || '';
                 });
             } else {
                 if (vehicleCountInput) vehicleCountInput.value = selected.vehicleTypes && selected.vehicleTypes.length ? selected.vehicleTypes.length : 1;
@@ -1954,7 +1956,7 @@ function initPurchaseEntryPage() {
             });
 
             const vehicleTypeEntries = Array.from(document.querySelectorAll('#vehicleTypeRows select.vehicle-type-row-select')).map(select => select.value).filter(Boolean);
-            const vehicleTypes = Number(headerData.vehicleCount) > 1 ? vehicleTypeEntries : [headerData.vehicleType].filter(Boolean);
+            const vehicleTypes = [headerData.vehicleType, ...vehicleTypeEntries].filter(Boolean);
 
             const expenseData = {
                 freightEntry: freightEntry ? freightEntry.value : '',
@@ -2197,6 +2199,20 @@ function initBillEntryPage() {
                     <td><button type="button" class="btn btn-outline-danger btn-sm delete-bill-row-btn"><i class="fas fa-trash"></i></button></td>
                 </tr>
             `).join('');
+            billDetailsBody.querySelectorAll('tr').forEach(row => updateBillRowAmount(row));
+            updateBillGrandTotal();
+        } else if (selectedArrival && Array.isArray(selectedArrival.details) && selectedArrival.details.length) {
+            billDetailsBody.innerHTML = selectedArrival.details.map((detail, index) => `
+                <tr>
+                    <td><input type="number" class="form-control form-control-sm bill-base-rate" min="0" step="0.01" placeholder="0"></td>
+                    <td class="bill-sl-no-cell">${index + 1}</td>
+                    <td><input type="text" class="form-control form-control-sm bill-variety" value="${detail.variety || ''}"></td>
+                    <td><input type="number" class="form-control form-control-sm bill-qty" value="${detail.quantity || ''}" min="0" step="1"></td>
+                    <td><input type="number" class="form-control form-control-sm bill-rate" readonly placeholder="0"></td>
+                    <td><input type="number" class="form-control form-control-sm bill-amount" readonly placeholder="0"></td>
+                    <td><button type="button" class="btn btn-outline-danger btn-sm delete-bill-row-btn"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
             updateBillGrandTotal();
         }
     }
@@ -2259,6 +2275,15 @@ function initBillEntryPage() {
             updateBillRowAmount(row);
             updateBillGrandTotal();
         }
+    });
+
+    billDetailsBody.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter' || !e.target.matches('.bill-base-rate, .bill-variety, .bill-qty')) return;
+        const row = e.target.closest('tr');
+        if (!row || row !== billDetailsBody.lastElementChild) return;
+        e.preventDefault();
+        addBillDetailRow();
+        billDetailsBody.lastElementChild.querySelector('.bill-base-rate')?.focus();
     });
 
     if (billForm) {
