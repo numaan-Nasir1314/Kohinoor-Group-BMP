@@ -139,11 +139,49 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function setupGlobalKeyboardNavigation() {
+    document.addEventListener('click', function(e) {
+        const row = e.target.closest('tbody tr');
+        if (!row) return;
+        document.querySelectorAll('tbody tr.keyboard-selected-row').forEach(item => item.classList.remove('keyboard-selected-row'));
+        row.classList.add('keyboard-selected-row');
+    });
+
     document.addEventListener('keydown', function(e) {
         const active = document.activeElement;
         if (!active) return;
 
         const isTextField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName);
+
+        if (e.key === 'Delete') {
+            const row = active.closest('tbody tr');
+            const body = row?.parentElement;
+            if (row?.classList.contains('keyboard-selected-row') && body && body.children.length > 1) {
+                e.preventDefault();
+                if (window.confirm('Delete this row?')) {
+                    row.remove();
+                    if (body.id === 'billDetailsBody') {
+                        renumberBillRows();
+                        updateBillGrandTotal();
+                    } else if (body.id === 'purchaseDetailsBody') {
+                        renumberRows();
+                    }
+                }
+            }
+            return;
+        }
+
+        if (e.key === 'Escape') {
+            const form = active.form;
+            const hasChanges = form && Array.from(form.elements).some(field => field.value && field.defaultValue !== field.value);
+            if (hasChanges && !window.confirm('Discard unsaved changes and go back?')) {
+                e.preventDefault();
+                return;
+            }
+            window.history.back();
+            return;
+        }
+
+        if (active.tagName === 'SELECT' || active.matches('input[list]')) return;
 
         if (isTextField && e.key === 'Enter' && active.form) {
             e.preventDefault();
@@ -1680,6 +1718,7 @@ function initPurchaseEntryPage() {
     const tableBody = document.getElementById('arrivalListTableBody');
     const unloadingTypeInput = document.getElementById('unloadingType');
     const inchargeNameInput = document.getElementById('inchargeName');
+    const arrivalUnloadingAmount = document.getElementById('arrivalUnloadingAmount');
     
     // Set today's date in ISO format for the date picker
     if (dateInput) {
@@ -1729,6 +1768,13 @@ function initPurchaseEntryPage() {
         }
         const newVehicle = vehicleTypeRows.querySelectorAll('select')[currentValues.length];
         if (newVehicle && count - 1 > currentValues.length) newVehicle.focus();
+    }
+
+    function updateArrivalUnloadingAmount() {
+        if (!arrivalUnloadingAmount) return;
+        const quantity = Array.from(detailsBody.querySelectorAll('tr')).reduce((sum, row) => sum + Number(row.querySelector('.crate-count-input')?.value || 0), 0);
+        const amount = unloadingTypeInput?.value === 'Mandi Labours' ? quantity / 1000 * 120 : 0;
+        arrivalUnloadingAmount.value = amount.toFixed(2);
     }
 
     function updateFarmerIdField() {
@@ -1815,14 +1861,18 @@ function initPurchaseEntryPage() {
             if (e.target && e.target.classList && e.target.classList.contains('crate-mode-select')) {
                 syncCrateCountFields(detailsBody);
             }
+            updateArrivalUnloadingAmount();
         });
+        detailsBody.addEventListener('input', updateArrivalUnloadingAmount);
     }
 
     if (vehicleCountInput) {
         vehicleCountInput.addEventListener('input', renderVehicleTypeRows);
     }
     renderVehicleTypeRows();
+    updateArrivalUnloadingAmount();
     syncCrateCountFields(document);
+    if (unloadingTypeInput) unloadingTypeInput.addEventListener('change', updateArrivalUnloadingAmount);
 
     if (billingBtn) {
         billingBtn.addEventListener('click', function() {
@@ -2448,6 +2498,8 @@ function updateBillGrandTotal() {
     const expenseElement = document.getElementById('billExpenseAmount');
     if (totalElement) totalElement.textContent = total.toFixed(2);
     if (expenseElement) expenseElement.textContent = expenseAmount.toFixed(2);
+    const freightElement = document.getElementById('billFreightAmount');
+    if (freightElement) freightElement.textContent = freight.toFixed(2);
     grandTotalElement.textContent = Math.max(total - expenseAmount, 0).toFixed(2);
 }
 
@@ -2510,8 +2562,8 @@ function printBill() {
                 </div>
                 <div class="summary">
                     <div>Total Amount: ${document.getElementById('billTotalAmount')?.textContent || '0.00'}</div>
-                    <div>Less: Expenses: ${document.getElementById('billExpenseAmount')?.textContent || '0.00'}</div>
-                    <div>${billData.expenses.replace(/\n/g, '<br>')}</div>
+                    <div>Less: Freight: ${document.getElementById('billFreightAmount')?.textContent || '0.00'}</div>
+                    <div>U/L: ${document.getElementById('billUnloadingAmount')?.textContent || '0.00'}</div>
                 </div>
                 <table>
                     <thead>
