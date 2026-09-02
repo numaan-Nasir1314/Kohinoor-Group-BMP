@@ -165,6 +165,7 @@ function setupGlobalKeyboardNavigation() {
             return;
         }
 
+
         if (e.key === 'Enter' && active && (active.tagName === 'BUTTON' || active.tagName === 'A')) {
             e.preventDefault();
             active.click();
@@ -186,15 +187,7 @@ function createNormalizedLedgerId(prefixValue, numericValue) {
 }
 
 function createDistinctLedgerPrefix(name, station) {
-                });
-                billDetailsBody.addEventListener('keydown', function(e) {
-                    if (e.key !== 'Enter' || !e.target.matches('.bill-base-rate, .bill-variety, .bill-qty')) return;
-                    const row = e.target.closest('tr');
-                    if (!row || row !== billDetailsBody.lastElementChild) return;
-                    e.preventDefault();
-                    addBillDetailRow();
-                    billDetailsBody.lastElementChild.querySelector('.bill-base-rate')?.focus();
-                });
+    const cleanName = String(name || '').trim();
     const cleanStation = String(station || '').trim();
     const nameWords = cleanName.split(/\s+/).filter(Boolean);
     const stationWords = cleanStation.split(/\s+/).filter(Boolean);
@@ -466,6 +459,8 @@ function initLaserPage() {
             }
         });
     }
+
+    enableLedgerKeyboardNavigation();
 
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', function() {
@@ -1533,7 +1528,7 @@ function searchLedger() {
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${formatDateForDisplay(record.date)}</td>
+            <td>${record.date || ''}</td>
             <td>${record.source || ''}</td>
             <td>${record.mode || ''}</td>
             <td class="text-end">${credit.toFixed(2)}</td>
@@ -1652,7 +1647,7 @@ function renderPurchaseArrivalList(searchTerm = '') {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${record.arrivalNo || ''}</td>
-            <td>${formatDateForDisplay(record.date)}</td>
+            <td>${record.date || ''}</td>
             <td>${record.name || ''}</td>
             <td>${record.station || ''}</td>
             <td>${record.vehicleCount || (Array.isArray(record.vehicleTypes) ? record.vehicleTypes.length : (record.vehicleType ? 1 : 0))}</td>
@@ -2131,6 +2126,8 @@ function populateArrivalBillingExpense(arrivalNo) {
     if (!selectedArrival || !Object.keys(expenseDetails).length) {
         expenseSummary.innerHTML = '<p class="mb-0">No expense details available for this arrival.</p>';
         expenseSummary.dataset.expenseAmount = '0';
+        const unloadingElement = document.getElementById('billUnloadingAmount');
+        if (unloadingElement) unloadingElement.textContent = '0.00';
         updateBillGrandTotal();
         return;
     }
@@ -2150,6 +2147,9 @@ function populateArrivalBillingExpense(arrivalNo) {
         <div class="mb-2"><strong>U/L:</strong> ${unloadingAmount.toFixed(2)}</div>
     `;
     expenseSummary.dataset.expenseAmount = String(totalExpense);
+    expenseSummary.dataset.unloadingAmount = String(unloadingAmount);
+    const unloadingField = document.getElementById('billUnloadingAmount');
+    if (unloadingField) unloadingField.textContent = unloadingAmount.toFixed(2);
     updateBillGrandTotal();
 }
 
@@ -2182,6 +2182,14 @@ function initBillEntryPage() {
         if (selectedArrival && billStationField) {
             billStationField.value = selectedArrival.station || '';
         }
+        const vehicleCountField = document.getElementById('billVehicleCount');
+        const vehicleTypesField = document.getElementById('billVehicleTypes');
+        if (selectedArrival && vehicleCountField) {
+            vehicleCountField.value = selectedArrival.vehicleCount || selectedArrival.vehicleTypes?.length || '';
+        }
+        if (selectedArrival && vehicleTypesField) {
+            vehicleTypesField.value = (selectedArrival.vehicleTypes || [selectedArrival.vehicleType]).filter(Boolean).join(', ');
+        }
         if (selectedArrival && billDateInput && selectedArrival.date) {
             billDateInput.value = formatDateToYYYYMMDD(selectedArrival.date);
         }
@@ -2199,7 +2207,6 @@ function initBillEntryPage() {
                     <td><button type="button" class="btn btn-outline-danger btn-sm delete-bill-row-btn"><i class="fas fa-trash"></i></button></td>
                 </tr>
             `).join('');
-            billDetailsBody.querySelectorAll('tr').forEach(row => updateBillRowAmount(row));
             updateBillGrandTotal();
         } else if (selectedArrival && Array.isArray(selectedArrival.details) && selectedArrival.details.length) {
             billDetailsBody.innerHTML = selectedArrival.details.map((detail, index) => `
@@ -2435,6 +2442,8 @@ function updateBillGrandTotal() {
     const unloadingAmount = unloadingType === 'Mandi Labours' ? ((billQuantity || arrivalQuantity) / 1000) * 120 : 0;
     const expenseAmount = arrival ? freight + unloadingAmount : Number(expenseSummary?.dataset.expenseAmount || 0);
     if (expenseSummary) expenseSummary.dataset.expenseAmount = String(expenseAmount);
+    const unloadingElement = document.getElementById('billUnloadingAmount');
+    if (unloadingElement) unloadingElement.textContent = unloadingAmount.toFixed(2);
     const totalElement = document.getElementById('billTotalAmount');
     const expenseElement = document.getElementById('billExpenseAmount');
     if (totalElement) totalElement.textContent = total.toFixed(2);
@@ -2447,6 +2456,8 @@ function printBill() {
         farmerName: document.getElementById('billFarmerName').value || 'N/A',
         serialNo: document.getElementById('billSerialNo').value || 'N/A',
         station: document.getElementById('billStation')?.value || 'N/A',
+        vehicleCount: document.getElementById('billVehicleCount')?.value || 'N/A',
+        vehicleTypes: document.getElementById('billVehicleTypes')?.value || 'N/A',
         date: document.getElementById('billDate').value || 'N/A',
         expenses: document.getElementById('billingExpenseSummary')?.innerText || 'No expense details available.'
     };
@@ -2493,6 +2504,8 @@ function printBill() {
                     <div><strong>Farmer Name:</strong> ${billData.farmerName}</div>
                     <div><strong>Arrival No.:</strong> ${billData.serialNo}</div>
                     <div><strong>Station:</strong> ${billData.station}</div>
+                    <div><strong>Vehicles:</strong> ${billData.vehicleCount}</div>
+                    <div><strong>Vehicle Types:</strong> ${billData.vehicleTypes}</div>
                     <div><strong>Date:</strong> ${billData.date}</div>
                 </div>
                 <div class="summary">

@@ -70,6 +70,14 @@
                             <label class="form-label">Station</label>
                             <input type="text" class="form-control" id="billStation" readonly>
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Vehicles</label>
+                            <input type="text" class="form-control" id="billVehicleCount" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Vehicle Types</label>
+                            <input type="text" class="form-control" id="billVehicleTypes" readonly>
+                        </div>
                     </div>
 
                     <div class="row g-4 mt-4 align-items-start">
@@ -125,6 +133,7 @@
                                 <div class="grand-total-section">
                                     <div>Total Amount: <span id="billTotalAmount">0.00</span></div>
                                     <div>Less: Expenses <span id="billExpenseAmount">0.00</span></div>
+                                    <div>U/L Amount: <span id="billUnloadingAmount">0.00</span></div>
                                     <h5 class="detail-title">Grand Total: <span id="grandTotalAmount">0.00</span></h5>
                                 </div>
                             </div>
