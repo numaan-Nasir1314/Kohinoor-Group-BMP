@@ -2118,6 +2118,9 @@ function initBillEntryPage() {
         if (selectedArrival && billStationField) {
             billStationField.value = selectedArrival.station || '';
         }
+        if (selectedArrival && billDateInput && selectedArrival.date) {
+            billDateInput.value = formatDateToYYYYMMDD(selectedArrival.date);
+        }
         populateArrivalBillingExpense(selectedArrivalNo);
     }
 
@@ -2377,7 +2380,7 @@ function printBill() {
                 <table>
                     <thead>
                         <tr>
-                            <th>No.</th>
+                            <th></th>
                             <th>SL.No.</th>
                             <th>Variety</th>
                             <th>Qty</th>
